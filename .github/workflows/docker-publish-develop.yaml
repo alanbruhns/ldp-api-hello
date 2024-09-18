@@ -23,9 +23,9 @@ jobs:
           echo "IMAGE_TAG=1.0.${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
       - name: Build and tag Docker image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-identity:${{ env.IMAGE_TAG }} -f src/Dockerfile src/
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-identity:${{ env.IMAGE_TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-identity:develop
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-hello:${{ env.IMAGE_TAG }} -f src/Dockerfile src/
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-hello:${{ env.IMAGE_TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-hello:develop
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-identity:${{ env.IMAGE_TAG }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-identity:develop
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-hello:${{ env.IMAGE_TAG }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-api-hello:develop
