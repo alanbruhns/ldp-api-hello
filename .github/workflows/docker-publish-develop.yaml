@@ -37,3 +37,18 @@ jobs:
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:develop
+
+      - name: Clone the ldp-platform-values repository
+        run: |
+          git clone https://github.com/alanbruhns/ldp-platform-values.git
+          cd ldp-platform-values
+          git checkout main
+
+      - name: Update YAML file with new image tag
+        run: |
+          sed -i "s/tag:.*/tag: ${{ env.IMAGE_TAG }}/" develop/ldp-api-hello.values.yaml
+          git add develop/ldp-api-hello.values.yaml
+          git commit -m "Update image tag to ${{ env.IMAGE_TAG }} for develop"
+          git push https://$GH_PAT@github.com/alanbruhns/ldp-platform-values.git main
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
