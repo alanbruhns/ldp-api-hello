@@ -28,7 +28,7 @@ app.UseHealthChecks("/readyz");  // Readiness probe endpoint
 
 app.MapGet("/hello", () =>
 {
-    return Ok("Hello");
+    return "Hello";
 })
 .WithName("GetHello")
 .WithOpenApi();
