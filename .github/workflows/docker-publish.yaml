@@ -44,10 +44,17 @@ jobs:
           cd ldp-platform-values
           git checkout main
 
-      - name: Update YAML file with new image tag
+      - name: Update or create YAML file with new image tag
         run: |
-          sed -i "s/tag:.*/tag: ${{ env.IMAGE_TAG }}/" main/ldp-api-hello.values.yaml
-          git add main/ldp-api-hello.values.yaml
+          FILE="main/ldp-api-hello.values.yaml"
+          if [ ! -f "$FILE" ]; then
+            echo "File $FILE does not exist. Creating file."
+            mkdir -p main
+            echo -e "imagePullSecrets:\n  - name: \"docker-hub-secret\"\n\nimage:\n  repository: docker.io/alanbruhns/ldp-api-hello\n  tag: ${env.IMAGE_TAG}\n\nservice:\n  type: ClusterIP\n  port: 80\n\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: http\nreadinessProbe:\n  httpGet:\n    path: /readyz\n    port: http" > $FILE
+          else
+            sed -i "s/tag:.*/tag: ${{ env.IMAGE_TAG }}/" $FILE
+          fi
+          git add $FILE
           git commit -m "Update image tag to ${{ env.IMAGE_TAG }} for main"
           git push https://$GH_PAT@github.com/alanbruhns/ldp-platform-values.git main
         env:
