@@ -1,82 +1,31 @@
 name: Docker Build and Publish
-
 on:
   push:
     branches:
       - main  # Run workflow on push to main branch
-
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out the repository
         uses: actions/checkout@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: Extract build number
         id: build_number
         run: |
           echo "BUILD_NUMBER=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
           echo "IMAGE_TAG=1.0.${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
-
       - name: Build and tag Docker image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }} -f src/Dockerfile src/
           docker tag ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:latest
-
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:latest
-
-      - name: Clone the ldp-platform-values repository
-        run: |
-          git clone https://github.com/alanbruhns/ldp-platform-values.git
-          cd ldp-platform-values
-          git checkout main
-
-      - name: Update or create YAML file with new image tag
-        run: |
-          FILE="main/ldp-api-hello.values.yaml"
-          IMAGE_TAG=${{ env.IMAGE_TAG }}
-          if [ ! -f "$FILE" ]; then
-            echo "File $FILE does not exist. Creating file."
-            mkdir -p main
-            cat <<EOF > $FILE
-imagePullSecrets:
-  - name: "docker-hub-secret"
-
-image:
-  repository: docker.io/alanbruhns/ldp-api-hello
-  tag: $IMAGE_TAG
-
-service:
-  type: ClusterIP
-  port: 80
-
-livenessProbe:
-  httpGet:
-    path: /healthz
-    port: http
-readinessProbe:
-  httpGet:
-    path: /readyz
-    port: http
-EOF
-          else
-            sed -i "s/tag:.*/tag: $IMAGE_TAG/" $FILE
-          fi
-          git add $FILE
-          git commit -m "Update image tag to $IMAGE_TAG for main"
-          git push https://$GH_PAT@github.com/alanbruhns/ldp-platform-values.git main
-        env:
-          GH_PAT: ${{ secrets.GH_PAT }}
