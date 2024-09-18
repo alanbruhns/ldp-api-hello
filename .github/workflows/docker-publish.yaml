@@ -47,15 +47,36 @@ jobs:
       - name: Update or create YAML file with new image tag
         run: |
           FILE="main/ldp-api-hello.values.yaml"
+          IMAGE_TAG=${{ env.IMAGE_TAG }}
           if [ ! -f "$FILE" ]; then
             echo "File $FILE does not exist. Creating file."
             mkdir -p main
-            echo -e "imagePullSecrets:\n  - name: \"docker-hub-secret\"\n\nimage:\n  repository: docker.io/alanbruhns/ldp-api-hello\n  tag: ${env.IMAGE_TAG}\n\nservice:\n  type: ClusterIP\n  port: 80\n\nlivenessProbe:\n  httpGet:\n    path: /healthz\n    port: http\nreadinessProbe:\n  httpGet:\n    path: /readyz\n    port: http" > $FILE
+            cat <<EOF > $FILE
+imagePullSecrets:
+  - name: "docker-hub-secret"
+
+image:
+  repository: docker.io/alanbruhns/ldp-api-hello
+  tag: $IMAGE_TAG
+
+service:
+  type: ClusterIP
+  port: 80
+
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: http
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+EOF
           else
-            sed -i "s/tag:.*/tag: ${{ env.IMAGE_TAG }}/" $FILE
+            sed -i "s/tag:.*/tag: $IMAGE_TAG/" $FILE
           fi
           git add $FILE
-          git commit -m "Update image tag to ${{ env.IMAGE_TAG }} for main"
+          git commit -m "Update image tag to $IMAGE_TAG for main"
           git push https://$GH_PAT@github.com/alanbruhns/ldp-platform-values.git main
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
