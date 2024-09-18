@@ -1,9 +1,9 @@
-name: Docker Build and Publish
+name: Docker Build and Publish to Develop
 
 on:
   push:
     branches:
-      - main  # Run workflow on push to main branch
+      - develop  # Trigger workflow on push to the develop branch
 
 jobs:
   build-and-publish:
@@ -31,9 +31,9 @@ jobs:
       - name: Build and tag Docker image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }} -f src/Dockerfile src/
-          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:latest
+          docker tag ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }} ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:develop
 
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:${{ env.IMAGE_TAG }}
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/ldp-identity-api:develop
