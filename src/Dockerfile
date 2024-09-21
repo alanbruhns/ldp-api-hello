@@ -26,6 +26,8 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Expose port 80
+ENV ASPNETCORE_URLS=http://+:8080
+
 EXPOSE 8080
 
 # Start the application
