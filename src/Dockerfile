@@ -25,15 +25,8 @@ WORKDIR /app
 # Copy published files
 COPY --from=publish /app/publish .
 
-# Override conflicting environment variables
-ENV HTTP_PORTS=""
-ENV HTTPS_PORTS=""
-
-# Set ASP.NET Core URL environment variable to use port 80
-ENV ASPNETCORE_URLS=http://+:80
-
 # Expose port 80
-EXPOSE 80
+EXPOSE 8080
 
 # Start the application
 ENTRYPOINT ["dotnet", "Api.dll"]
