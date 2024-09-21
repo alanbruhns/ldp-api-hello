@@ -45,20 +45,23 @@ service:
   port: 80
 
 ingress:
-  enabled: true # Habilitamos el Ingress
-  className: "nginx"
+  enabled: true
+  className: "webapprouting.kubernetes.azure.com"
   annotations: 
+    cert-manager.io/cluster-issuer: letsencrypt-production
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
   hosts:
-    - host: api1.dev.bruhns.lol # Cambia el host por el deseado
+    - host: hello.api.bruhns.lol 
       paths:
         - path: /
           pathType: Prefix
   tls: 
-    - secretName: api1-dev-tls # Nombre del secret para TLS (puedes configurarlo con cert-manager)
+    - secretName: hello-api-bruhns-lol-tls 
       hosts:
-        - api1.dev.bruhns.lol
+        - hello.api.bruhns.lol 
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
