@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
@@ -11,6 +13,8 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHealthChecks(); // Add health check services
+builder.Services.AddLogging();
+builder.Services.AddSingleton<IAWSEventStore, AWSEventStore>();
 
 var app = builder.Build();
 
@@ -31,15 +35,24 @@ app.MapGet("/hello", (ILogger<Program> logger) =>
 
 
 // POST endpoint for AWSEvent
-app.MapPost("/api/participant/cancel", (AWSEvent awsEvent, ILogger<Program> logger) =>
+app.MapPost("/api/participant/cancel", (AWSEvent awsEvent, IAWSEventStore eventStore, ILogger<Program> logger) =>
 {
     logger.LogInformation("Received an AWS Event for Participant cancellation. Id: {Id}, ParticipantId: {ParticipantProfileId}", awsEvent.Detail.Id, awsEvent.Detail.ParticipantProfileId);
+
+    eventStore.AddEvent(awsEvent);
 
     return Results.Ok(awsEvent); 
 })
 .WithName("PostAWSEvent")
 .WithOpenApi();
 
+app.MapGet("/api/participant/events", (IAWSEventStore eventStore) =>
+{
+    var events = eventStore.GetAllEvents();
+    return Results.Ok(events);
+})
+.WithName("GetAllAWSEvents")
+.WithOpenApi();
 
 app.Run();
 
@@ -65,4 +78,25 @@ internal record SubscriptionCancelledIntegrationEvent
 {
     public Guid Id { get; set; }
     public Guid ParticipantProfileId { get; set; }
+}
+
+internal interface IAWSEventStore
+{
+    void AddEvent(AWSEvent awsEvent);
+    List<AWSEvent> GetAllEvents();
+}
+
+internal class AWSEventStore : IAWSEventStore
+{
+    private readonly List<AWSEvent> _events = new();
+
+    public void AddEvent(AWSEvent awsEvent)
+    {
+        _events.Add(awsEvent);
+    }
+
+    public List<AWSEvent> GetAllEvents()
+    {
+        return _events;
+    }
 }
