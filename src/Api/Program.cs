@@ -21,8 +21,9 @@ app.UseSwaggerUI();
 app.UseHealthChecks("/healthz"); // Liveness probe endpoint
 app.UseHealthChecks("/readyz");  // Readiness probe endpoint
 
-app.MapGet("/hello", () =>
+app.MapGet("/hello", (ILogger<Program> logger) =>
 {
+    logger.LogInformation("Hello endpoint was called.");
     return "Hello";
 })
 .WithName("GetHello")
@@ -30,10 +31,11 @@ app.MapGet("/hello", () =>
 
 
 // POST endpoint for AWSEvent
-app.MapPost("/api/participant/cancel", (AWSEvent awsEvent) =>
+app.MapPost("/api/participant/cancel", (AWSEvent awsEvent, ILogger<Program> logger) =>
 {
-    // Here you can add your logic to process the AWSEvent
-    return Results.Ok(awsEvent); // Return the event data for now
+    logger.LogInformation("Received an AWS Event for Participant cancellation. Id: {Id}, ParticipantId: {ParticipantProfileId}", awsEvent.Detail.Id, awsEvent.Detail.ParticipantProfileId);
+
+    return Results.Ok(awsEvent); 
 })
 .WithName("PostAWSEvent")
 .WithOpenApi();
@@ -62,5 +64,5 @@ internal record AWSEvent
 internal record SubscriptionCancelledIntegrationEvent
 {
     public Guid Id { get; set; }
-    public Guid ParticipantId { get; set; }
+    public Guid ParticipantProfileId { get; set; }
 }
