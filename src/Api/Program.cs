@@ -28,9 +28,39 @@ app.MapGet("/hello", () =>
 .WithName("GetHello")
 .WithOpenApi();
 
+
+// POST endpoint for AWSEvent
+app.MapPost("/api/participant/cancel", (AWSEvent awsEvent) =>
+{
+    // Here you can add your logic to process the AWSEvent
+    return Results.Ok(awsEvent); // Return the event data for now
+})
+.WithName("PostAWSEvent")
+.WithOpenApi();
+
+
 app.Run();
 
 internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+}
+
+internal record AWSEvent
+{
+    public string Account { get; set; }
+    public string DetailType { get; set; }
+    public string Id { get; set; }
+    public string Region { get; set; }
+    public List<object> Resources { get; set; }
+    public string Source { get; set; }
+    public DateTime Time { get; set; }
+    public string Version { get; set; }
+    public SubscriptionCancelledIntegrationEvent Detail { get; set; }
+}
+
+internal record SubscriptionCancelledIntegrationEvent
+{
+    public Guid Id { get; set; }
+    public Guid ParticipantId { get; set; }
 }
