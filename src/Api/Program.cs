@@ -45,14 +45,13 @@ app.MapPost("/api/participant/cancel", (AWSEvent awsEvent, IAWSEventStore eventS
 .WithName("PostAWSEvent")
 .WithOpenApi();
 
-// POST endpoint for AWSEvent
 app.MapDelete("/api/participant/events", (IAWSEventStore eventStore) =>
 {
     eventStore.RemoveEvents();
 
     return Results.Ok();
 })
-.WithName("PostAWSEvent")
+.WithName("DeleteAWSEvent")
 .WithOpenApi();
 
 
