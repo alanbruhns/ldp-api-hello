@@ -25,14 +25,13 @@ app.UseSwaggerUI();
 app.UseHealthChecks("/healthz"); // Liveness probe endpoint
 app.UseHealthChecks("/readyz");  // Readiness probe endpoint
 
-app.MapGet("/hello", (ILogger<Program> logger) =>
+app.MapGet("/api/participant/events", (IAWSEventStore eventStore) =>
 {
-    logger.LogInformation("Hello endpoint was called.");
-    return "Hello";
+    var events = eventStore.GetAllEvents();
+    return Results.Ok(events);
 })
-.WithName("GetHello")
+.WithName("GetAllAWSEvents")
 .WithOpenApi();
-
 
 // POST endpoint for AWSEvent
 app.MapPost("/api/participant/cancel", (AWSEvent awsEvent, IAWSEventStore eventStore, ILogger<Program> logger) =>
@@ -46,13 +45,16 @@ app.MapPost("/api/participant/cancel", (AWSEvent awsEvent, IAWSEventStore eventS
 .WithName("PostAWSEvent")
 .WithOpenApi();
 
-app.MapGet("/api/participant/events", (IAWSEventStore eventStore) =>
+// POST endpoint for AWSEvent
+app.MapDelete("/api/participant/events", (IAWSEventStore eventStore) =>
 {
-    var events = eventStore.GetAllEvents();
-    return Results.Ok(events);
+    eventStore.RemoveEvents();
+
+    return Results.Ok();
 })
-.WithName("GetAllAWSEvents")
+.WithName("PostAWSEvent")
 .WithOpenApi();
+
 
 app.Run();
 
@@ -63,41 +65,40 @@ internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary
 
 internal record AWSEvent
 {
-    public string Account { get; set; }
-    public string DetailType { get; set; }
-    public string Id { get; set; }
-    public string Region { get; set; }
-    public List<object> Resources { get; set; }
-    public string Source { get; set; }
+    public string Account { get; set; } = string.Empty;
+    public string DetailType { get; set; } = string.Empty;
+    public string Id { get; set; } = string.Empty;
+    public string Region { get; set; } = string.Empty;
+    public List<object> Resources { get; set; } = [];
+    public string Source { get; set; } = string.Empty;
     public DateTime Time { get; set; }
-    public string Version { get; set; }
-    public SubscriptionCancelledIntegrationEvent Detail { get; set; }
+    public string Version { get; set; } = string.Empty;
+    public SubscriptionCancelledIntegrationEvent Detail { get; set; } = new();
 }
 
 internal record SubscriptionCancelledIntegrationEvent
 {
     public Guid Id { get; set; }
     public Guid ParticipantProfileId { get; set; }
-    public string SubscriptionId { get; set; }
+    public string SubscriptionId { get; set; } = string.Empty;
 }
 
 internal interface IAWSEventStore
 {
     void AddEvent(AWSEvent awsEvent);
     List<AWSEvent> GetAllEvents();
+    void RemoveEvents();
+
 }
 
 internal class AWSEventStore : IAWSEventStore
 {
-    private readonly List<AWSEvent> _events = new();
+    private readonly List<AWSEvent> _events = [];
 
     public void AddEvent(AWSEvent awsEvent)
-    {
-        _events.Add(awsEvent);
-    }
-
+        => _events.Add(awsEvent);
     public List<AWSEvent> GetAllEvents()
-    {
-        return _events;
-    }
+        => _events;
+    public void RemoveEvents()
+        => _events.Clear();
 }
