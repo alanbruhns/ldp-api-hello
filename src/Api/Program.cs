@@ -51,7 +51,7 @@ app.MapDelete("/api/participant/events", (IAWSEventStore eventStore) =>
 
     return Results.Ok();
 })
-.WithName("DeleteAWSEvent")
+.WithName("DeleteAWSEvents")
 .WithOpenApi();
 
 
