@@ -78,6 +78,7 @@ internal record SubscriptionCancelledIntegrationEvent
 {
     public Guid Id { get; set; }
     public Guid ParticipantProfileId { get; set; }
+    public string SubscriptionId { get; set; }
 }
 
 internal interface IAWSEventStore
