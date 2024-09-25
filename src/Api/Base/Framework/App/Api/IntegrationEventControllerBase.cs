@@ -7,13 +7,15 @@ namespace Hello.Base.Framework.App.Api
     [Route("/api/integration-events")]
     public abstract class IntegrationEventControllerBase : ControllerBase
     {
+        private readonly IAWSEventStore _eventStore;
         private readonly IMediator _mediator;
         private readonly IEventToNotificationMapper _eventMapper;
 
-        protected IntegrationEventControllerBase(IMediator mediator, IEventToNotificationMapper eventMapper)
+        protected IntegrationEventControllerBase(IAWSEventStore eventStore, IMediator mediator, IEventToNotificationMapper eventMapper)
         {
-            _mediator = mediator;
-            _eventMapper = eventMapper;
+            _eventStore = eventStore ?? throw new ArgumentNullException(nameof(eventStore));
+            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+            _eventMapper = eventMapper ?? throw new ArgumentNullException(nameof(eventMapper));
         }
 
         [HttpPost]
@@ -30,12 +32,23 @@ namespace Hello.Base.Framework.App.Api
 
                 await _mediator.Publish(notification);
 
+                _eventStore.Enqueue(awsEvent);
+
                 return NoContent();
             }
             catch (Exception ex)
             {
                 return BadRequest($"Failed to process event: {ex.Message}");
             }
+        }
+
+        [HttpGet]
+        //[Authorize(AuthenticationSchemes = "ApiKey")]
+        public IActionResult GetEvents()
+        {
+            var @event = _eventStore.TryDequeue();
+
+            return Ok(@event);
         }
     }
 }

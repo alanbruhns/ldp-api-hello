@@ -3,7 +3,7 @@
     public interface IAWSEventStore
     {
         void Enqueue(AWSEvent awsEvent);
-        AWSEvent? TryPeek();
+        AWSEvent? TryDequeue();
         void Clear();
     }
 
@@ -14,8 +14,8 @@
         public void Enqueue(AWSEvent awsEvent)
             => _events.Enqueue(awsEvent);
 
-        public AWSEvent? TryPeek()
-            => _events.TryPeek(out var @event)
+        public AWSEvent? TryDequeue()
+            => _events.TryDequeue(out var @event)
                 ? @event 
                 : null;
 
